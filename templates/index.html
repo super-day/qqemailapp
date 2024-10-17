@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QQ Mail App</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .container {
+            margin-top: 50px;
+            max-width: 600px;
+        }
+        h1, h2 {
+            color: #343a40;
+        }
+        .form-control:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 5px rgba(0,123,255,.5);
+        }
+        .btn-primary, .btn-success {
+            width: 100%;
+        }
+        .email-content {
+            background-color: #ffffff;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center">QQ Email Reader and Sender</h1>
+        <h2 class="mt-4">Login</h2>
+        <input type="text" id="username" class="form-control" placeholder="QQ Email" required />
+        <input type="password" id="password" class="form-control mt-2" placeholder="Authorization Code" required />
+        <button class="btn btn-primary mt-2" onclick="readEmail()">Read Latest Email</button>
+
+        <div id="emailContent" class="mt-3 email-content"></div>
+
+        <h2 class="mt-5">Send Email</h2>
+        <input type="text" id="to" class="form-control" placeholder="Recipient" required />
+        <input type="text" id="subject" class="form-control mt-2" placeholder="Subject" required />
+        <textarea id="body" class="form-control mt-2" placeholder="Email Body" rows="4" required></textarea>
+        <button class="btn btn-success mt-2" onclick="sendEmail()">Send Email</button>
+    </div>
+
+    <script>
+        function readEmail() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            fetch('/read_email', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username, password })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Login failed. Check your email and authorization code.');
+                }
+                return response.json();
+            })
+            .then(data => {
+                document.getElementById('emailContent').innerHTML = `
+                    <h3>Subject: ${data.subject}</h3>
+                    <p>From: ${data.from}</p>
+                    <p>Body: ${data.body}</p>
+                `;
+            })
+            .catch(error => {
+                document.getElementById('emailContent').innerHTML = `<p class="text-danger">${error.message}</p>`;
+            });
+        }
+
+        function sendEmail() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const to = document.getElementById('to').value;
+            const subject = document.getElementById('subject').value;
+            const body = document.getElementById('body').value;
+
+            fetch('/send_email', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username, password, to, subject, body })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to send email.');
+                }
+                return response.json();
+            })
+            .then(data => {
+                alert(data.status);
+            })
+            .catch(error => {
+                alert(error.message);
+            });
+        }
+    </script>
+</body>
+</html>
